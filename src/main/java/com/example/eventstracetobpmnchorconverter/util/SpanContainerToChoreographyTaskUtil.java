@@ -26,6 +26,51 @@ public class SpanContainerToChoreographyTaskUtil {
 
     private static final String PROCESSED_EVENT_TAG_KEY = "processed.event";
 
+    public static ChoreographyTask createFirstChoreographyTaskFromSpanContainer(final SpanContainer spanContainer,
+                                                                               final Map<String, String> mapOfDetectedProcessesInTrace,
+                                                                               final Set<Participant> choreographyParticipants,
+                                                                               final Set<Message> messageSet,
+                                                                               final Map<Message, MessageFlow> messageMessageFlowMap) {
+        final var spanContainerIsSimpleSpan = spanContainer.getSpanComponent() instanceof Span;
+        if (spanContainerIsSimpleSpan) {
+            return createFirstChoreographyTaskForSimpleSpan(spanContainer, mapOfDetectedProcessesInTrace, choreographyParticipants, messageSet, messageMessageFlowMap);
+
+        }
+        final var spanContainerIsSpanEventTuple = spanContainer.getSpanComponent() instanceof SpanEventTuple;
+        if (!spanContainerIsSpanEventTuple) {
+            return createChoreographyTaskFromSpanContainer(spanContainer, mapOfDetectedProcessesInTrace, choreographyParticipants, messageSet, messageMessageFlowMap);
+        }
+        throw new RuntimeException("SpanContainer is a SpanEventTuple");
+    }
+
+    private static ChoreographyTask createFirstChoreographyTaskForSimpleSpan(SpanContainer spanContainer,
+                                                                             Map<String, String> mapOfDetectedProcessesInTrace,
+                                                                             Set<Participant> choreographyParticipants,
+                                                                             Set<Message> messageSet,
+                                                                             Map<Message, MessageFlow> messageMessageFlowMap) {
+        final var choreographyTaskId = UUID.randomUUID().toString();
+        final var span = (Span) spanContainer.getSpanComponent();
+        final var choreographyTaskName = span.getOperationName();
+        final var initiatingParticipant = new Participant(UUID.randomUUID().toString(), "user");
+        choreographyParticipants.add(initiatingParticipant);
+        final var initiatingParticipantRef = initiatingParticipant.getId();
+        final var nameOfMicroserviceOfSpan = mapOfDetectedProcessesInTrace.get(span.getProcessID());
+        final var receivingParticipant = new Participant(UUID.randomUUID().toString(), nameOfMicroserviceOfSpan);
+        choreographyParticipants.add(receivingParticipant);
+        final var receivingParticipantRef = receivingParticipant.getId();
+        final var participantRefs = List.of(initiatingParticipantRef, receivingParticipantRef);
+        final var message = new Message(UUID.randomUUID().toString(), "");
+        messageSet.add(message);
+        final var messageFlow = new MessageFlow(UUID.randomUUID().toString(),
+                message.getId(),
+                initiatingParticipant.getId(),
+                receivingParticipant.getId());
+        messageMessageFlowMap.put(message, messageFlow);
+        final var messageFlowRefs = List.of(messageFlow.getId());
+        return new ChoreographyTask(choreographyTaskId, choreographyTaskName, initiatingParticipantRef,
+                participantRefs, messageFlowRefs);
+    }
+
 
     public static ChoreographyTask createChoreographyTaskFromSpanContainer(final SpanContainer spanContainer,
                                                                            final Map<String, String> mapOfDetectedProcessesInTrace,

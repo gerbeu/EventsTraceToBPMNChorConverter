@@ -33,22 +33,32 @@ public class SpanContainerGraphToChoreographyGraphConverter {
         final Map<Message, MessageFlow> messageMessageFlowMap = new HashMap<>();
         final Map<SpanContainer, ChoreographyTask> spanContainersWithChoreographyTasks = new HashMap<>();
 
-        for (int i = 1; i < spanContainerGraph.nodes().size(); i++) {
+        for (int i = 0; i < spanContainerGraph.nodes().size(); i++) {
             final var spanContainer = List.copyOf(spanContainerGraph.nodes()).get(i);
             log.info("SpanContainer: " + spanContainer);
-
-            ChoreographyTask choreographyTask = spanContainersWithChoreographyTasks.get(spanContainer);
-            if (choreographyTask == null) {
-                log.info("Creating ChoreographyTask for spanContainer: " + spanContainer);
-                choreographyTask = SpanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
-                        spanContainer,
-                        mapOfDetectedProcessesInTrace,
-                        participantHashSet,
-                        messageHashSet,
-                        messageMessageFlowMap);
-                spanContainersWithChoreographyTasks.put(spanContainer, choreographyTask);
+            final var existsChoreographyTaskForSpanContainer = spanContainersWithChoreographyTasks.containsKey(spanContainer);
+            ChoreographyTask choreographyTask = null;
+            if(!existsChoreographyTaskForSpanContainer) {
+                if(i == 0) {
+                    // Creating first ChoreographyTask
+                    choreographyTask = SpanContainerToChoreographyTaskUtil.createFirstChoreographyTaskFromSpanContainer(
+                            spanContainer,
+                            mapOfDetectedProcessesInTrace,
+                            participantHashSet,
+                            messageHashSet,
+                            messageMessageFlowMap);
+                } else {
+                    choreographyTask = SpanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
+                            spanContainer,
+                            mapOfDetectedProcessesInTrace,
+                            participantHashSet,
+                            messageHashSet,
+                            messageMessageFlowMap);
+                }
+            } else {
+                choreographyTask = spanContainersWithChoreographyTasks.get(spanContainer);
             }
-
+            spanContainersWithChoreographyTasks.put(spanContainer, choreographyTask);
             for (final var successor : spanContainerGraph.successors(spanContainer)) {
                 ChoreographyTask successorChoreographyTask = spanContainersWithChoreographyTasks.get(successor);
                 if (successorChoreographyTask == null) {
@@ -73,9 +83,4 @@ public class SpanContainerGraphToChoreographyGraphConverter {
             System.out.println(edge);
         }
     }
-
-
-
-
-
 }
