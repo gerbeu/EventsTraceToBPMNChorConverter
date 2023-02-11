@@ -3,11 +3,12 @@ package com.example.eventstracetobpmnchorconverter.util;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.spans.Span;
 import com.example.eventstracetobpmnchorconverter.producing.graph.SpanContainer;
 import com.example.eventstracetobpmnchorconverter.producing.graph.SpanEventTuple;
+import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 public class SpanContainerGraphUtils {
 
@@ -73,5 +74,19 @@ public class SpanContainerGraphUtils {
             // TODO throw exception
             throw new RuntimeException("SpanContainer does not hold a span or a span event tuple");
         }).toList();
+    }
+
+    public static boolean hasSpanContainerSuccessorsBelongingToDifferentProcesses(SpanContainer spanContainer,
+                                                                                  ImmutableGraph<SpanContainer> spanContainerGraph) {
+        final var spanContainerSuccessors = spanContainerGraph.successors(spanContainer);
+        final var spanContainerSuccessorsSize = spanContainerSuccessors.size();
+        if (spanContainerSuccessorsSize < 2) {
+            return false;
+        }
+        final var processesOfSuccessors = spanContainerSuccessors.stream()
+                .map(each -> SpanContainerUtils.getProcessID(each))
+                .distinct()
+                .toList();
+        return processesOfSuccessors.size() > 1;
     }
 }

@@ -4,7 +4,7 @@ import java.util.List;
 
 public class ParallelGateway extends Gateway {
 
-    protected ParallelGateway(String id, List<String> incomingFlows, List<String> outgoingFlows) {
+    public ParallelGateway(String id, List<String> incomingFlows, List<String> outgoingFlows) {
         super(id, incomingFlows, outgoingFlows);
     }
 

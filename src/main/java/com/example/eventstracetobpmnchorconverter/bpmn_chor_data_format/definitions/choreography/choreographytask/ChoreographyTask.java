@@ -42,8 +42,12 @@ public class ChoreographyTask extends ChoreographyShape {
         this.messageFlowRefs = messageFlowRefs;
     }
 
-    public void addParticipantRef(final String participantRef) {
-        this.participantRefs.add(participantRef);
+    public void setIncomingFlow(String incomingFlow) {
+        this.incomingFlow = incomingFlow;
+    }
+
+    public void setOutgoingFlow(String outgoingFlow) {
+        this.outgoingFlow = outgoingFlow;
     }
 
     // to string

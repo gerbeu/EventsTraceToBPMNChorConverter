@@ -40,4 +40,15 @@ public class SpanContainerUtils {
         throw new RuntimeException("Span is an event marker but is neither an event producer nor an event processor");
     }
 
+    public static String getProcessID(final SpanContainer spanContainer) {
+        final var spanComponent = spanContainer.getSpanComponent();
+        if (spanComponent instanceof Span) {
+            return ((Span) spanContainer.getSpanComponent()).getProcessID();
+        }
+        if (spanComponent instanceof SpanEventTuple) {
+            return ((SpanEventTuple) spanComponent).getFirstSpan().getProcessID();
+        }
+        throw new RuntimeException("SpanContainer does not contain a Span or a SpanEventTuple");
+    }
+
 }
