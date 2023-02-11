@@ -1,16 +1,18 @@
 package com.example.eventstracetobpmnchorconverter.controllers;
 
-import com.example.eventstracetobpmnchorconverter.consume.jaegerTrace.Trace;
-import com.example.eventstracetobpmnchorconverter.consume.jaegerTrace.criterias.ProcessTagCriteria;
-import com.example.eventstracetobpmnchorconverter.consume.jaegerTrace.criterias.TagCriteria;
-import com.example.eventstracetobpmnchorconverter.consume.jaegerTrace.graph_data_structure.SpanGraphCreator;
-import com.example.eventstracetobpmnchorconverter.consume.jaegerTrace.visitors.TopicsInfoTraceVisitor;
+import com.example.eventstracetobpmnchorconverter.Algorithm;
+import com.example.eventstracetobpmnchorconverter.jaegerTrace.Trace;
+import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.ProcessTagCriteria;
+import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.TagCriteria;
+import com.example.eventstracetobpmnchorconverter.visitors.jaeger_trace.TopicsInfoVisitor;
+import com.example.eventstracetobpmnchorconverter.visitors.jaeger_trace.TraceToSpanGuavaGraphVisitor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.MessageFormat;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -31,13 +33,6 @@ public class JaegerUIController {
                             span.getOperationName(), span.getSpanID());
                 }
         );
-    }
-
-    private void createSpanGraph(final Trace trace) {
-        final var spanGraphCreator = new SpanGraphCreator();
-        final var spanGraph = spanGraphCreator.createSpanGraph(trace.getSpans());
-        spanGraph.print();
-
     }
 
     private void printTraceAsJson(final Trace trace) {
@@ -62,7 +57,12 @@ public class JaegerUIController {
         log.info(trace.toString());
         printSpanNamesOfTrace(trace);
         printTraceAsJson(trace);
-        createSpanGraph(trace);
+    }
+
+    @PostMapping("/print-body")
+    public void printRequestBody(@RequestBody Trace trace) {
+        log.info("In printRequestBody");
+        log.info(trace.toString());
     }
 
 
@@ -76,14 +76,24 @@ public class JaegerUIController {
     @PostMapping("/get-topics-from-trace")
     public void processTopicsFromTrace(@RequestBody Trace trace) {
         log.info("In processTopicsFromTrace");
-        final var topicsInfoTraceVisitor = new TopicsInfoTraceVisitor();
-        topicsInfoTraceVisitor.visit(trace);
-        topicsInfoTraceVisitor.printTopicsInfo();
+        final var topicsInfoTraceVisitor = new TopicsInfoVisitor();
+        final var topicsInfo = (List<String>) trace.accept(topicsInfoTraceVisitor);
+        topicsInfo.forEach(log::info);
     }
 
     @PostMapping("/transform-trace-to-bpmn-choreography")
     public void processTraceToBPMNChor(@RequestBody Trace trace) {
         log.info("In processTraceToBPMNChor");
+        final var algorithm = new Algorithm();
+        algorithm.convertTraceToBPMNChorResponse(trace);
+    }
+
+    @PostMapping("/transform-trace-to-guava-graph")
+    public void processTraceToGuavaGraph(@RequestBody Trace trace) {
+        log.info("In processTraceToBPMNChor");
+        final var traceToSpanGuavaGraphVisitor = new TraceToSpanGuavaGraphVisitor();
+        trace.accept(traceToSpanGuavaGraphVisitor);
+
     }
 
 }
