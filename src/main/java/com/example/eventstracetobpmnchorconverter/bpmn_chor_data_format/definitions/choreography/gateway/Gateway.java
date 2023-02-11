@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,9 +22,18 @@ public abstract class Gateway extends ChoreographyShape {
     @JacksonXmlProperty(localName = "bpmn2:outgoing")
     private List<String> outgoingFlows;
 
-    protected Gateway(String id, List<String> incomingFlows, List<String> outgoingFlows) {
+    protected Gateway(String id) {
         this.id = id == null ? UUID.randomUUID().toString() : id;
-        this.incomingFlows = incomingFlows;
-        this.outgoingFlows = outgoingFlows;
+        incomingFlows = new ArrayList<>();
+        outgoingFlows = new ArrayList<>();
     }
+
+    public void addIncomingFlow(String incomingFlow) {
+        incomingFlows.add(incomingFlow);
+    }
+
+    public void addOutgoingFlow(String outgoingFlow) {
+        outgoingFlows.add(outgoingFlow);
+    }
+
 }
