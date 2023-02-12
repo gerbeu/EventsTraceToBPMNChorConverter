@@ -1,8 +1,8 @@
 package com.example.eventstracetobpmnchorconverter.util;
 
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.Message;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.MessageFlow;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.Participant;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.MessageFlow;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.Participant;
 
 import java.util.Map;
 import java.util.UUID;

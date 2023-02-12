@@ -1,15 +1,6 @@
 package com.example.eventstracetobpmnchorconverter.producing;
 
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.Participant;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.choreographytask.ChoreographyTask;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.choreographytask.ParticipantRef;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.events.EndEvent;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.events.StartEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-
-import java.util.List;
 
 public class XMLTest {
 

@@ -1,20 +1,10 @@
 package com.example.eventstracetobpmnchorconverter.producing;
 
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.Message;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.MessageFlow;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.Participant;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.choreographytask.ChoreographyTask;
-import com.example.eventstracetobpmnchorconverter.bpmn_chor_data_format.definitions.choreography.events.StartEvent;
-import com.example.eventstracetobpmnchorconverter.jaegerTrace.spans.Span;
-import com.example.eventstracetobpmnchorconverter.util.GuavaGraphMaximumDepthUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.graph.Graph;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.ImmutableGraph;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.MessageFlow;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.Participant;
 import lombok.extern.slf4j.Slf4j;
 
-import java.text.MessageFormat;
 import java.util.*;
 
 @Slf4j

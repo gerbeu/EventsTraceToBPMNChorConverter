@@ -1,6 +1,6 @@
 package com.example.eventstracetobpmnchorconverter.jaegerTrace;
 
-import com.example.eventstracetobpmnchorconverter.visitors.jaeger_trace.TraceVisitor;
+import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TraceVisitor;
 
 public interface TraceElement {
 

@@ -2,7 +2,7 @@ package com.example.eventstracetobpmnchorconverter.jaegerTrace;
 
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.processes.Process;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.spans.Span;
-import com.example.eventstracetobpmnchorconverter.visitors.jaeger_trace.TraceVisitor;
+import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TraceVisitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

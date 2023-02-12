@@ -1,11 +1,11 @@
 package com.example.eventstracetobpmnchorconverter.controllers;
 
-import com.example.eventstracetobpmnchorconverter.Algorithm;
+import com.example.eventstracetobpmnchorconverter.algorithm.EventDrivenBPMNChoreographyAlgorithm;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.Trace;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.ProcessTagCriteria;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.TagCriteria;
-import com.example.eventstracetobpmnchorconverter.visitors.jaeger_trace.TopicsInfoVisitor;
-import com.example.eventstracetobpmnchorconverter.visitors.jaeger_trace.TraceToSpanGuavaGraphVisitor;
+import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TopicsInfoVisitor;
+import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TraceToSpanGuavaGraphVisitor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +84,7 @@ public class JaegerUIController {
     @PostMapping("/transform-trace-to-bpmn-choreography")
     public void processTraceToBPMNChor(@RequestBody Trace trace) {
         log.info("In processTraceToBPMNChor");
-        final var algorithm = new Algorithm();
+        final var algorithm = new EventDrivenBPMNChoreographyAlgorithm(trace);
         algorithm.convertTraceToBPMNChorResponse(trace);
     }
 
@@ -94,6 +94,13 @@ public class JaegerUIController {
         final var traceToSpanGuavaGraphVisitor = new TraceToSpanGuavaGraphVisitor();
         trace.accept(traceToSpanGuavaGraphVisitor);
 
+    }
+
+    @PostMapping("/algorithm")
+    public void processAlgorithmRequest(@RequestBody Trace trace) {
+        log.info("In processAlgorithmRequest");
+        final var eventDrivenBPMNChoreographyAlgorithm = new EventDrivenBPMNChoreographyAlgorithm(trace);
+        eventDrivenBPMNChoreographyAlgorithm.run();
     }
 
 }
