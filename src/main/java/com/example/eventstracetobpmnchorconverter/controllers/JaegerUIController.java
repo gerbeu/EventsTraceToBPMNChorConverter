@@ -9,6 +9,8 @@ import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trac
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.json.JSONFilter;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.MessageFormat;
@@ -97,10 +99,17 @@ public class JaegerUIController {
     }
 
     @PostMapping("/algorithm")
-    public void processAlgorithmRequest(@RequestBody Trace trace) {
+    public ResponseEntity<String> processAlgorithmRequest(@RequestBody Trace trace) {
         log.info("In processAlgorithmRequest");
         final var eventDrivenBPMNChoreographyAlgorithm = new EventDrivenBPMNChoreographyAlgorithm(trace);
-        eventDrivenBPMNChoreographyAlgorithm.run();
+        final var result = eventDrivenBPMNChoreographyAlgorithm.run();
+        final var objectMapper = new ObjectMapper();
+        try {
+            final var resultJson = objectMapper.writeValueAsString(result);
+            return ResponseEntity.ok(resultJson);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

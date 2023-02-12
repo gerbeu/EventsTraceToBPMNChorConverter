@@ -3,19 +3,30 @@ package com.example.eventstracetobpmnchorconverter.producing.information.bpmn.de
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.choreographytask.ChoreographyTask;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.events.EndEvent;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.events.StartEvent;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.Gateway;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.ParallelGateway;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@AllArgsConstructor
+@Builder
 @Getter
+@JacksonXmlRootElement(localName = "bpmn2:choreography")
 public class Choreography {
 
     @JacksonXmlProperty(isAttribute = true)
     private final String id;
+
+    @JacksonXmlProperty(isAttribute = true)
+    private final String name;
 
     @JacksonXmlProperty(localName = "bpmn2:startEvent")
     private StartEvent startEvent;
@@ -40,13 +51,17 @@ public class Choreography {
     @JacksonXmlProperty(localName = "bpmn2:sequenceFlow")
     private List<SequenceFlow> sequenceFlows;
 
-    public Choreography(String id) {
-        this.id = id == null ? UUID.randomUUID().toString() : id;
-        this.participants = new ArrayList<>();
-        this.messageFlows = new ArrayList<>();
-        this.choreographyTasks = new ArrayList<>();
-        this.sequenceFlows = new ArrayList<>();
-    }
+    @JacksonXmlElementWrapper(useWrapping = false)
+    @JacksonXmlProperty(localName = "bpmn2:parallelGateway")
+    private List<ParallelGateway> gateways;
+
+//    public Choreography(String id) {
+//        this.id = id == null ? UUID.randomUUID().toString() : id;
+//        this.participants = new ArrayList<>();
+//        this.messageFlows = new ArrayList<>();
+//        this.choreographyTasks = new ArrayList<>();
+//        this.sequenceFlows = new ArrayList<>();
+//    }
 
     public void addChoreographyTask(ChoreographyTask choreographyTask) {
         choreographyTasks.add(choreographyTask);

@@ -2,16 +2,13 @@ package com.example.eventstracetobpmnchorconverter.algorithm.converters;
 
 import com.example.eventstracetobpmnchorconverter.layout.BPMNChoreography2DGraphLayoutCreator;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
-import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.ChoreographyShape;
-import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.MessageFlow;
-import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.Participant;
-import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.SequenceFlow;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.*;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.choreographytask.ChoreographyTask;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.events.StartEvent;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.Gateway;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.ParallelGateway;
 import com.example.eventstracetobpmnchorconverter.producing.graph.SpanContainer;
-import com.example.eventstracetobpmnchorconverter.tests.GraphDepthPrinter;
+import com.example.eventstracetobpmnchorconverter.util.RandomIDGenerator;
 import com.example.eventstracetobpmnchorconverter.util.SpanContainerGraphUtils;
 import com.example.eventstracetobpmnchorconverter.util.SpanContainerToChoreographyTaskUtil;
 import com.google.common.graph.GraphBuilder;
@@ -29,7 +26,7 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
 
     private final Set<Participant> participantHashSet;
 
-    private final Set<Message> messageHashSet;
+    private final List<Message> messages;
 
     private final Map<Message, MessageFlow> messageMessageFlowMap;
 
@@ -49,7 +46,7 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
         this.spanContainerGraph = spanContainerGraph;
         this.mapOfDetectedProcessesInTrace = mapOfDetectedProcessesInTrace;
         this.participantHashSet = new HashSet<>();
-        this.messageHashSet = new HashSet<>();
+        this.messages = new ArrayList<>();
         this.messageMessageFlowMap = new HashMap<>();
         this.spanContainersWithChoreographyShape = new HashMap<>();
         this.sequenceFlowHashSet = new HashSet<>();
@@ -63,6 +60,35 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
         return getChoreographyGraph();
     }
 
+    public Choreography createChoreography() {
+        log.info("Creating Choreography");
+        final var choreographyShapes = new ArrayList<>(choreographyGraph.nodes());
+        final var choreographyTasks = choreographyShapes.stream()
+                .filter(choreographyShape -> choreographyShape instanceof ChoreographyTask)
+                .map(choreographyShape -> (ChoreographyTask) choreographyShape)
+                .toList();
+        final var parallelGateways = choreographyShapes.stream()
+                .filter(choreographyShape -> choreographyShape instanceof ParallelGateway)
+                .map(choreographyShape -> (ParallelGateway) choreographyShape)
+                .toList();
+        final var startEvent = choreographyShapes.stream()
+                .filter(choreographyShape -> choreographyShape instanceof StartEvent)
+                .map(choreographyShape -> (StartEvent) choreographyShape)
+                .findFirst()
+                .orElseThrow();
+        final var choreography = Choreography.builder()
+                .id(RandomIDGenerator.generate())
+                .name("Choreography")
+                .choreographyTasks(choreographyTasks)
+                .participants(new ArrayList<>(participantHashSet))
+                .messageFlows(new ArrayList<>(messageMessageFlowMap.values()))
+                .startEvent(startEvent)
+                .sequenceFlows(new ArrayList<>(sequenceFlowHashSet))
+                .gateways(parallelGateways)
+                .build();
+        return choreography;
+    }
+
     public ImmutableGraph<ChoreographyShape> getChoreographyGraph() {
         return ImmutableGraph.copyOf(choreographyGraph);
     }
@@ -71,7 +97,7 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
     public void createChoreographyGraph() {
         log.info("Creating ChoreographyGraph from SpanContainerGraph");
         // Add StartEvent
-        final var startEvent = new StartEvent(UUID.randomUUID().toString());
+        final var startEvent = new StartEvent(RandomIDGenerator.generateWithPrefix("StartEvent"));
         choreographyGraph.addNode(startEvent);
         for (int i = 0; i < spanContainerGraph.nodes().size(); i++) {
             final var spanContainer = List.copyOf(spanContainerGraph.nodes()).get(i);
@@ -82,10 +108,10 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                 if (i == 0) {
                     // Creating first ChoreographyTask
                     choreographyShape = SpanContainerToChoreographyTaskUtil.createFirstChoreographyTaskFromSpanContainer(
-                            spanContainer, mapOfDetectedProcessesInTrace, participantHashSet, messageHashSet, messageMessageFlowMap);
+                            spanContainer, mapOfDetectedProcessesInTrace, participantHashSet, messages, messageMessageFlowMap);
                 } else {
                     choreographyShape = SpanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
-                            spanContainer, mapOfDetectedProcessesInTrace, participantHashSet, messageHashSet, messageMessageFlowMap);
+                            spanContainer, mapOfDetectedProcessesInTrace, participantHashSet, messages, messageMessageFlowMap);
                 }
             } else {
                 choreographyShape = (ChoreographyTask) spanContainersWithChoreographyShape.get(spanContainer);
@@ -97,8 +123,8 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                             spanContainerGraph);
             if (hasSpanContainerSuccessorsBelongingToDifferentProcesses) {
                 final var choreographyTask = (ChoreographyTask) choreographyShape;
-                choreographyShape = new ParallelGateway(UUID.randomUUID().toString());
-                final var sequenceFlow = new SequenceFlow(UUID.randomUUID().toString());
+                choreographyShape = new ParallelGateway(RandomIDGenerator.generateWithPrefix("ParallelGateway"));
+                final var sequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
                 sequenceFlow.setSourceRef(choreographyTask.getId());
                 sequenceFlow.setSourceRef(choreographyShape.getId());
                 choreographyTask.setOutgoingFlow(sequenceFlow.getId());
@@ -119,14 +145,14 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
         for (final var successor : spanContainerGraph.successors(spanContainer)) {
             ChoreographyTask successorChoreographyTask =
                     (ChoreographyTask) spanContainersWithChoreographyShape.get(successor);
-            final var sequenceFlow = new SequenceFlow(UUID.randomUUID().toString());
+            final var sequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
             if (successorChoreographyTask == null) {
                 log.info("Creating ChoreographyTask for successor: " + successor);
                 successorChoreographyTask = SpanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
                         successor,
                         mapOfDetectedProcessesInTrace,
                         participantHashSet,
-                        messageHashSet,
+                        messages,
                         messageMessageFlowMap);
                 successorChoreographyTaskNotNull(choreographyShape,
                         successorChoreographyTask,

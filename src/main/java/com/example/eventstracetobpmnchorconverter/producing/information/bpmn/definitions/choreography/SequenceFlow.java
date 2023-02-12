@@ -1,5 +1,6 @@
 package com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography;
 
+import com.example.eventstracetobpmnchorconverter.util.RandomIDGenerator;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 import lombok.ToString;
@@ -20,7 +21,7 @@ public class SequenceFlow extends ChoreographyShape {
     private String targetRef;
 
     public SequenceFlow(String id) {
-        this.id = id == null ? UUID.randomUUID().toString() : id;
+        this.id = id == null ? RandomIDGenerator.generateWithPrefix("SequenceFlow") : id;
     }
 
     public void setSourceRef(String sourceRef) {

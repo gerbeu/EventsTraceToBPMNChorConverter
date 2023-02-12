@@ -1,7 +1,6 @@
 package com.example.eventstracetobpmnchorconverter.algorithm;
 
 import com.example.eventstracetobpmnchorconverter.algorithm.converters.ChoreographyGraphToBPMNDiagramConverter;
-import com.example.eventstracetobpmnchorconverter.algorithm.converters.ChoreographyGraphToChoreographyConverter;
 import com.example.eventstracetobpmnchorconverter.algorithm.result.EventDrivenBPMNChoreographyResult;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.EventsInfoVisitor;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.ProcessesInfoVisitor;
@@ -16,9 +15,11 @@ import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.TagCriter
 import com.example.eventstracetobpmnchorconverter.algorithm.converters.SpanContainerGraphToChoreographyGraphConverter;
 import com.example.eventstracetobpmnchorconverter.producing.graph.SpanContainer;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.bpmndiagram.BPMNDiagram;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.Choreography;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.ChoreographyShape;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.MessageFlow;
+import com.example.eventstracetobpmnchorconverter.util.RandomIDGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.graph.ImmutableGraph;
@@ -45,11 +46,13 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
 
     private Choreography choreography;
 
+    private BPMNDiagram bpmnDiagram;
+
     private ImmutableGraph<SpanContainer> spanContainerGraph;
 
     private ImmutableGraph<ChoreographyShape> choreographyGraph;
 
-    private Set<Message> messageHashSet;
+    private List<Message> messageHashSet;
 
     private Map<Message, MessageFlow> messageMessageFlowMap;
 
@@ -63,10 +66,45 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         createEventsInfo();
         createTopicsInfo();
         createSpanContainerGraphFromTrace();
-        createChoreographyGraphFromSpanContainerGraph();
-        createChoreography();
+        createChoreographyGraphAndChoreography();
         createBPMNChoreographyDiagram();
-        return null;
+        log.info("Algorithm finished");
+        printChoreography();
+        bpmnDefinitions = new BPMNDefinitions(RandomIDGenerator.generate(), new ArrayList<>(messageHashSet), choreography, bpmnDiagram);
+        printBPMNDefintions();
+        XmlMapper xmlMapper = new XmlMapper();
+        String xml = null;
+        try {
+            xml = xmlMapper.writeValueAsString(bpmnDefinitions);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return new EventDrivenBPMNChoreographyResult(null, null, xml);
+    }
+
+    private void printBPMNDefintions() {
+        log.info("BPMNDefinitions: {}", bpmnDefinitions);
+        XmlMapper xmlMapper = new XmlMapper();
+        String xml = null;
+        try {
+            xml = xmlMapper.writeValueAsString(bpmnDefinitions);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(xml);
+    }
+
+    //TODO REMOVE
+    private void printChoreography() {
+        log.info("Choreography: {}", choreography);
+        XmlMapper xmlMapper = new XmlMapper();
+        String xml = null;
+        try {
+            xml = xmlMapper.writeValueAsString(choreography);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(xml);
     }
 
     private void filterTrace() {
@@ -102,24 +140,16 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         this.spanContainerGraph = (ImmutableGraph<SpanContainer>) this.trace.accept(traceToSpanContainerGraphVisitor);
     }
 
-    private void createChoreographyGraphFromSpanContainerGraph() {
+    private void createChoreographyGraphAndChoreography() {
         log.info("Creating ChoreographyGraph from SpanContainerGraph");
         trace.accept(processesInfoVisitor);
         final var mapOfDetectedProcessesInTrace = (Map<String, String>) this.trace.accept(processesInfoVisitor);
         final var spanContainerGraphToChoreographyGraphConverter = new SpanContainerGraphToChoreographyGraphConverter(
                 spanContainerGraph, mapOfDetectedProcessesInTrace);
         this.choreographyGraph = spanContainerGraphToChoreographyGraphConverter.convert();
-        this.messageHashSet = spanContainerGraphToChoreographyGraphConverter.getMessageHashSet();
+        this.messageHashSet = spanContainerGraphToChoreographyGraphConverter.getMessages();
         this.messageMessageFlowMap = spanContainerGraphToChoreographyGraphConverter.getMessageMessageFlowMap();
-
-    }
-
-    private void createChoreography() {
-        log.info("Creating Choreography from ChoreographyGraph");
-        final var choreographyGraphToChoreographyConverter = new ChoreographyGraphToChoreographyConverter();
-        // TODO final var choreography = choreographyGraphToChoreographyConverter.convert(choreographyGraph);
-        // TODO  this.choreography = new Choreogra
-        this.choreography = new Choreography("CHOR_1");
+        this.choreography = spanContainerGraphToChoreographyGraphConverter.createChoreography();
     }
 
     private void createBPMNChoreographyDiagram() {
@@ -127,7 +157,7 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         final var choreographyGraphToBPMNDiagramConverter =
                 new ChoreographyGraphToBPMNDiagramConverter(choreographyGraph, choreography.getId(), messageHashSet,
                         messageMessageFlowMap);
-        final var bpmnDiagram = choreographyGraphToBPMNDiagramConverter.convert();
+        this.bpmnDiagram = choreographyGraphToBPMNDiagramConverter.convert();
         XmlMapper xmlMapper = new XmlMapper();
         String xml = null;
         try {

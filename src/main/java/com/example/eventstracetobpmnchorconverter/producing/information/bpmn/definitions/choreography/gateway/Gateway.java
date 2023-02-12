@@ -1,17 +1,18 @@
 package com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway;
 
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.ChoreographyShape;
+import com.example.eventstracetobpmnchorconverter.util.RandomIDGenerator;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
 public abstract class Gateway extends ChoreographyShape {
 
+    @JacksonXmlProperty(isAttribute = true)
     private final String id;
 
     @JacksonXmlElementWrapper(useWrapping = false)
@@ -23,7 +24,7 @@ public abstract class Gateway extends ChoreographyShape {
     private List<String> outgoingFlows;
 
     protected Gateway(String id) {
-        this.id = id == null ? UUID.randomUUID().toString() : id;
+        this.id = id == null ? RandomIDGenerator.generateWithPrefix("Gateway") : id;
         incomingFlows = new ArrayList<>();
         outgoingFlows = new ArrayList<>();
     }

@@ -14,7 +14,7 @@ public class BPMNChoreography2DGraphLayoutCreator implements GraphLayoutCreator<
     private static final int DEFAULT_X_LEVEL = 20;
     private static final int DEFAULT_Y_LEVEL = 100;
     private static final int X_INCREMENT_PER_LEVEL =  120;
-    private static final int Y_INCREMENT_PER_LEVEL = 50;
+    private static final int Y_INCREMENT_PER_LEVEL = 200;
 
 
     @Override

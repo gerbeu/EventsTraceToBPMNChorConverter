@@ -12,7 +12,7 @@ public class MessageFlowUtil {
     public static MessageFlow createMessageFlow(Participant initiatingParticipant, Participant receivingParticipant,
                                                  Message message, Map<Message, MessageFlow> messageMessageFlowMap) {
         final var messageFlow = MessageFlow.builder()
-                .id(UUID.randomUUID().toString())
+                .id(RandomIDGenerator.generateWithPrefix("MessageFlow"))
                 .sourceRef(initiatingParticipant.getId())
                 .targetRef(receivingParticipant.getId())
                 .messageRef(message.getId())

@@ -14,7 +14,7 @@ public class SpanGraphToChoreographyGraphConverter {
     private final Set<Participant> participantHashSet = new HashSet<>();
     ;
 
-    private final List<Message> messageList = new ArrayList<>();
+    private final List<Message> messages = new ArrayList<>();
 
     private final Map<Message, MessageFlow> messageMessageFlowMap = new HashMap<>();
 
