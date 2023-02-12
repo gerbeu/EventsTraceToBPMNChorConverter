@@ -98,10 +98,6 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         final var spanContainerGraphToChoreographyGraphConverter = new SpanContainerGraphToChoreographyGraphConverter(
                 spanContainerGraph, mapOfDetectedProcessesInTrace);
         this.choreographyGraph = spanContainerGraphToChoreographyGraphConverter.convert();
-        final var rootChoreographyShape = this.choreographyGraph.nodes().iterator().next();
-        final var bpmnChoreography2DGraphLayoutCreator = new BPMNChoreography2DGraphLayoutCreator();
-        bpmnChoreography2DGraphLayoutCreator.layout(this.choreographyGraph, rootChoreographyShape);
-        GraphDepthPrinter.printTree(this.choreographyGraph, rootChoreographyShape);
 
     }
 

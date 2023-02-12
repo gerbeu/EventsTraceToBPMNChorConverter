@@ -1,5 +1,6 @@
 package com.example.eventstracetobpmnchorconverter.algorithm.converters;
 
+import com.example.eventstracetobpmnchorconverter.layout.BPMNChoreography2DGraphLayoutCreator;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.ChoreographyShape;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.MessageFlow;
@@ -10,6 +11,7 @@ import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.def
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.Gateway;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.ParallelGateway;
 import com.example.eventstracetobpmnchorconverter.producing.graph.SpanContainer;
+import com.example.eventstracetobpmnchorconverter.tests.GraphDepthPrinter;
 import com.example.eventstracetobpmnchorconverter.util.SpanContainerGraphUtils;
 import com.example.eventstracetobpmnchorconverter.util.SpanContainerToChoreographyTaskUtil;
 import com.google.common.graph.GraphBuilder;
@@ -58,6 +60,7 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
     @Override
     public ImmutableGraph<ChoreographyShape> convert() {
         createChoreographyGraph();
+        addCoordinatesToEachChoreographyShape();
         return getChoreographyGraph();
     }
 
@@ -160,7 +163,8 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
     }
 
     private void addCoordinatesToEachChoreographyShape() {
-        // Iterate over each level of the graph
-
+        final var rootChoreographyShape = this.choreographyGraph.nodes().iterator().next();
+        final var bpmnChoreography2DGraphLayoutCreator = new BPMNChoreography2DGraphLayoutCreator();
+        bpmnChoreography2DGraphLayoutCreator.layout(this.choreographyGraph, rootChoreographyShape);
     }
 }
