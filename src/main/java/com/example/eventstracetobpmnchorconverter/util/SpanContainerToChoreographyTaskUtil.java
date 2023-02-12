@@ -61,10 +61,16 @@ public class SpanContainerToChoreographyTaskUtil {
         final var participantRefs = List.of(initiatingParticipantRef, receivingParticipantRef);
         final var message = new Message(UUID.randomUUID().toString(), "");
         messageSet.add(message);
-        final var messageFlow = new MessageFlow(UUID.randomUUID().toString(),
-                message.getId(),
-                initiatingParticipant.getId(),
-                receivingParticipant.getId());
+        final var messageFlow = MessageFlow.builder()
+                .id(UUID.randomUUID().toString())
+                .messageRef(message.getId())
+                .sourceRef(initiatingParticipant.getId())
+                .targetRef(receivingParticipant.getId())
+                .build();
+//        final var messageFlow = new MessageFlow(UUID.randomUUID().toString(),
+//                message.getId(),
+//                initiatingParticipant.getId(),
+//                receivingParticipant.getId());
         messageMessageFlowMap.put(message, messageFlow);
         final var messageFlowRefs = List.of(messageFlow.getId());
         return new ChoreographyTask(choreographyTaskId, choreographyTaskName, initiatingParticipantRef,
@@ -177,7 +183,7 @@ public class SpanContainerToChoreographyTaskUtil {
         try {
             final var event = objectMapper.readValue(eventString, Event.class);
             final var message = new Message(UUID.randomUUID().toString(), event.getType());
-            messageSet.add(message);
+            // TODO messageSet.add(message);
             return message;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

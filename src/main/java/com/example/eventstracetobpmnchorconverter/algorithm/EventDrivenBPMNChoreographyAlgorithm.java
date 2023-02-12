@@ -1,12 +1,12 @@
 package com.example.eventstracetobpmnchorconverter.algorithm;
 
 import com.example.eventstracetobpmnchorconverter.algorithm.converters.ChoreographyGraphToBPMNDiagramConverter;
+import com.example.eventstracetobpmnchorconverter.algorithm.converters.ChoreographyGraphToChoreographyConverter;
 import com.example.eventstracetobpmnchorconverter.algorithm.result.EventDrivenBPMNChoreographyResult;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.EventsInfoVisitor;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.ProcessesInfoVisitor;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TopicsInfoVisitor;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TraceToSpanContainerGraphVisitor;
-import com.example.eventstracetobpmnchorconverter.layout.BPMNChoreography2DGraphLayoutCreator;
 import com.example.eventstracetobpmnchorconverter.producing.information.EventsInfo;
 import com.example.eventstracetobpmnchorconverter.producing.information.TopicsInfo;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.BPMNDefinitions;
@@ -15,8 +15,12 @@ import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.ProcessTa
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.TagCriteria;
 import com.example.eventstracetobpmnchorconverter.algorithm.converters.SpanContainerGraphToChoreographyGraphConverter;
 import com.example.eventstracetobpmnchorconverter.producing.graph.SpanContainer;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.Choreography;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.ChoreographyShape;
-import com.example.eventstracetobpmnchorconverter.tests.GraphDepthPrinter;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.MessageFlow;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.graph.ImmutableGraph;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,9 +43,15 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
 
     private BPMNDefinitions bpmnDefinitions;
 
+    private Choreography choreography;
+
     private ImmutableGraph<SpanContainer> spanContainerGraph;
 
     private ImmutableGraph<ChoreographyShape> choreographyGraph;
+
+    private Set<Message> messageHashSet;
+
+    private Map<Message, MessageFlow> messageMessageFlowMap;
 
     public EventDrivenBPMNChoreographyAlgorithm(Trace trace) {
         this.trace = trace;
@@ -54,6 +64,7 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         createTopicsInfo();
         createSpanContainerGraphFromTrace();
         createChoreographyGraphFromSpanContainerGraph();
+        createChoreography();
         createBPMNChoreographyDiagram();
         return null;
     }
@@ -98,13 +109,34 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         final var spanContainerGraphToChoreographyGraphConverter = new SpanContainerGraphToChoreographyGraphConverter(
                 spanContainerGraph, mapOfDetectedProcessesInTrace);
         this.choreographyGraph = spanContainerGraphToChoreographyGraphConverter.convert();
+        this.messageHashSet = spanContainerGraphToChoreographyGraphConverter.getMessageHashSet();
+        this.messageMessageFlowMap = spanContainerGraphToChoreographyGraphConverter.getMessageMessageFlowMap();
 
     }
 
+    private void createChoreography() {
+        log.info("Creating Choreography from ChoreographyGraph");
+        final var choreographyGraphToChoreographyConverter = new ChoreographyGraphToChoreographyConverter();
+        // TODO final var choreography = choreographyGraphToChoreographyConverter.convert(choreographyGraph);
+        // TODO  this.choreography = new Choreogra
+        this.choreography = new Choreography("CHOR_1");
+    }
+
     private void createBPMNChoreographyDiagram() {
-        log.info("Creating BPMN Choreography Diagram from SpanContainerGraph");
-        final var choreographyGraphToBPMNDiagramConverter = new ChoreographyGraphToBPMNDiagramConverter(choreographyGraph);
-        choreographyGraphToBPMNDiagramConverter.convert();
+        log.info("Creating BPMN Choreography Diagram from ChoreographyGraph and Choreography");
+        final var choreographyGraphToBPMNDiagramConverter =
+                new ChoreographyGraphToBPMNDiagramConverter(choreographyGraph, choreography.getId(), messageHashSet,
+                        messageMessageFlowMap);
+        final var bpmnDiagram = choreographyGraphToBPMNDiagramConverter.convert();
+        XmlMapper xmlMapper = new XmlMapper();
+        String xml = null;
+        try {
+            xml = xmlMapper.writeValueAsString(bpmnDiagram);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(xml);
+
     }
 
     private void createTopicsInfo() {

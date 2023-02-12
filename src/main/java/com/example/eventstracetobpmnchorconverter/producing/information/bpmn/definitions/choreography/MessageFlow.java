@@ -3,9 +3,11 @@ package com.example.eventstracetobpmnchorconverter.producing.information.bpmn.de
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @AllArgsConstructor
+@Builder
 @Getter
 @JacksonXmlRootElement(localName = "bpmn2:messageFlow")
 public class MessageFlow {

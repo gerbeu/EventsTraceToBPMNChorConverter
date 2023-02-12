@@ -11,12 +11,12 @@ public class MessageFlowUtil {
 
     public static MessageFlow createMessageFlow(Participant initiatingParticipant, Participant receivingParticipant,
                                                  Message message, Map<Message, MessageFlow> messageMessageFlowMap) {
-        final var messageFlow = new MessageFlow(
-                UUID.randomUUID().toString(),
-                initiatingParticipant.getId(),
-                receivingParticipant.getId(),
-                message.getId()
-        );
+        final var messageFlow = MessageFlow.builder()
+                .id(UUID.randomUUID().toString())
+                .sourceRef(initiatingParticipant.getId())
+                .targetRef(receivingParticipant.getId())
+                .messageRef(message.getId())
+                .build();
         messageMessageFlowMap.put(message, messageFlow);
         return messageFlow;
     }

@@ -27,4 +27,12 @@ public class BPMNPlane {
     @JacksonXmlProperty(localName = "bpmndi:BPMNEdge")
     private List<BPMNEdge> edges;
 
+    public void addShape(BPMNShape shape) {
+        shapes.add(shape);
+    }
+
+    public void addEdge(BPMNEdge edge) {
+        edges.add(edge);
+    }
+
 }

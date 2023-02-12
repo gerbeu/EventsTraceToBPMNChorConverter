@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
 @Builder
 public class BPMNShape {
@@ -30,6 +29,6 @@ public class BPMNShape {
     private final String choreographyActivityShape;
 
     @JacksonXmlProperty(localName = "dc:Bounds")
-    private Bounds bounds;
+    private final Bounds bounds;
 
 }
