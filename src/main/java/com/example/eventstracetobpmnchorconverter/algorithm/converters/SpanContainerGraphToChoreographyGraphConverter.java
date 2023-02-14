@@ -170,9 +170,10 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
         firstChoreographyShape.setIncomingFlow(sequenceFlow.getId());
         sequenceFlowHashSet.add(sequenceFlow);
         choreographyGraph.putEdge(startEvent, firstChoreographyShape);
-        // TODO 14 here
-        final var lastChoreographyTask =
-                (ChoreographyTask) spanContainersWithChoreographyShape.get(List.copyOf(spanContainerGraph.nodes()).get(spanContainerGraph.nodes().size() - 1));
+        final var lastEdge = spanContainerGraph.edges().stream()
+                .reduce((first, second) -> second)
+                .orElseThrow();
+        final var lastChoreographyTask = (ChoreographyTask) spanContainersWithChoreographyShape.get(lastEdge.target());
         final var endEvent = new EndEvent(RandomIDGenerator.generateWithPrefix("EndEvent"));
         final var lastSequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
         lastSequenceFlow.setSourceRef(lastChoreographyTask.getId());

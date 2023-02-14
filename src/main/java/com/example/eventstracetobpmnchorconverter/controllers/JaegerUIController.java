@@ -1,6 +1,7 @@
 package com.example.eventstracetobpmnchorconverter.controllers;
 
 import com.example.eventstracetobpmnchorconverter.algorithm.EventDrivenBPMNChoreographyAlgorithm;
+import com.example.eventstracetobpmnchorconverter.algorithm.result.EventDrivenBPMNChoreographyResult;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.Trace;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.ProcessTagCriteria;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.TagCriteria;
@@ -106,16 +107,11 @@ public class JaegerUIController {
     }
 
     @PostMapping("/algorithm")
-    public ResponseEntity<String> processAlgorithmRequest(@RequestBody Trace trace) {
+    @ResponseBody()
+    public ResponseEntity<EventDrivenBPMNChoreographyResult> processAlgorithmRequest(@RequestBody Trace trace) {
         log.info("In processAlgorithmRequest");
         final var result = eventDrivenBPMNChoreographyAlgorithm.run(trace);
-        final var objectMapper = new ObjectMapper();
-        try {
-            final var resultJson = objectMapper.writeValueAsString(result);
-            return ResponseEntity.ok(resultJson);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return ResponseEntity.ok(result);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.eventstracetobpmnchorconverter.algorithm.topicsEventsInfo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -9,6 +10,8 @@ import java.util.Set;
 @Getter
 @ToString
 public class Topic {
+
+    @JsonIgnore
     private String topicId;
     private String topicName;
     private Set<String> consumers;

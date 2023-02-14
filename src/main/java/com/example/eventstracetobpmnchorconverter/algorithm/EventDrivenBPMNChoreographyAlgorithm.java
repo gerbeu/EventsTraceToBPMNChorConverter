@@ -75,52 +75,10 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
     public EventDrivenBPMNChoreographyResult run(Trace trace) {
         this.trace = trace;
         filterTrace();
-        createEventsInfo();
-        createTopicsInfo();
         createSpanContainerGraphFromTrace();
         createChoreographyGraphAndChoreography();
         createBPMNChoreographyDiagram();
-        log.info("Algorithm finished");
-        printChoreography();
-        bpmnDefinitions = new BPMNDefinitions(RandomIDGenerator.generate(), new ArrayList<>(messageHashSet), choreography, bpmnDiagram);
-        printBPMNDefintions();
-        XmlMapper xmlMapper = new XmlMapper();
-        String xml = null;
-        try {
-            xml = xmlMapper.writeValueAsString(bpmnDefinitions);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        topicsEventsInfoService.getTopics().forEach(topic -> {
-            log.info("Topic: {}", topic);
-        });
-        System.out.println(xml);
-        return new EventDrivenBPMNChoreographyResult(xml);
-    }
-
-    private void printBPMNDefintions() {
-        log.info("BPMNDefinitions: {}", bpmnDefinitions);
-        XmlMapper xmlMapper = new XmlMapper();
-        String xml = null;
-        try {
-            xml = xmlMapper.writeValueAsString(bpmnDefinitions);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println(xml);
-    }
-
-    //TODO REMOVE
-    private void printChoreography() {
-        log.info("Choreography: {}", choreography);
-        XmlMapper xmlMapper = new XmlMapper();
-        String xml = null;
-        try {
-            xml = xmlMapper.writeValueAsString(choreography);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println(xml);
+        return createEventDrivenBPMNChoreographyResult();
     }
 
     private void filterTrace() {
@@ -136,13 +94,6 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         tagCriteria.meetCriteria(trace);
         final var processTagCriteria = new ProcessTagCriteria();
         processTagCriteria.meetCriteria(trace);
-        // Detect all occurred events in the trace
-        trace.accept(eventsInfoVisitor);
-        final var listOfDetectedEventsInTrace = (List<String>) trace.accept(eventsInfoVisitor);
-        // Detect all occured topics in the trace
-        trace.accept(topicsInfoVisitor);
-        final var setOfDetectedTopicsInTrace = (Set<String>) trace.accept(topicsInfoVisitor);
-        // Detect all processes (microservices) in the trace
     }
 
     private void createSpanContainerGraphFromTrace() {
@@ -168,25 +119,25 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
                 new ChoreographyGraphToBPMNDiagramConverter(choreographyGraph, choreography.getId(), messageHashSet,
                         messageMessageFlowMap);
         this.bpmnDiagram = choreographyGraphToBPMNDiagramConverter.convert();
+    }
+
+    private EventDrivenBPMNChoreographyResult createEventDrivenBPMNChoreographyResult() {
+        bpmnDefinitions = new BPMNDefinitions(RandomIDGenerator.generate(), new ArrayList<>(messageHashSet), choreography, bpmnDiagram);
+        final var bpmnDefinitionsXml = createXmlStringFromBPMNDefinitions();
+        final var topicsEventsInfo = topicsEventsInfoService.getTopics();
+        return new EventDrivenBPMNChoreographyResult(bpmnDefinitionsXml, topicsEventsInfo);
+    }
+
+    private String createXmlStringFromBPMNDefinitions() {
         XmlMapper xmlMapper = new XmlMapper();
         String xml = null;
         try {
-            xml = xmlMapper.writeValueAsString(bpmnDiagram);
+            xml = xmlMapper.writeValueAsString(bpmnDefinitions);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
         System.out.println(xml);
-
-    }
-
-    private void createTopicsInfo() {
-        log.info("Creating TopicsInfo from Trace");
-
-    }
-
-    private void createEventsInfo() {
-        log.info("Creating EventsInfo from Trace");
-
+        return xml;
     }
 
 }
