@@ -15,12 +15,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.text.MessageFormat;
 import java.util.*;
 
 @Service
 @Slf4j
+@RequestScope
 public class SpanContainerToChoreographyTaskUtil {
 
     private static final String PUBLISHING_EVENT = "publishing event";

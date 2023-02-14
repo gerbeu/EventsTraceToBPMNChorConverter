@@ -4,11 +4,13 @@ import com.example.eventstracetobpmnchorconverter.algorithm.topicsEventsInfo.Top
 import com.example.eventstracetobpmnchorconverter.util.RandomIDGenerator;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.*;
 
 @Service
 @Getter
+@RequestScope
 public class TopicsEventsInfoService {
 
     private Set<Topic> topics = new HashSet<>();

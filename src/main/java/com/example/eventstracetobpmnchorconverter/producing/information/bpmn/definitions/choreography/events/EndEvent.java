@@ -3,10 +3,12 @@ package com.example.eventstracetobpmnchorconverter.producing.information.bpmn.de
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor
+@Getter
 public class EndEvent extends Event {
 
     @JacksonXmlProperty(isAttribute = true)
@@ -16,5 +18,16 @@ public class EndEvent extends Event {
     @JacksonXmlElementWrapper(useWrapping = false)
     @JacksonXmlProperty(localName = "bpmn2:incoming")
     private List<String> incomingFlows;
+
+    public EndEvent(String id) {
+        this.id = id;
+        this.incomingFlows = new ArrayList<>();
+    }
+
+    public void addIncomingFlow(String incomingFlow) {
+        this.incomingFlows.add(incomingFlow);
+    }
+
+
 
 }

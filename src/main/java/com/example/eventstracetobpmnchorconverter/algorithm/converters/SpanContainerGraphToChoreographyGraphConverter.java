@@ -4,6 +4,7 @@ import com.example.eventstracetobpmnchorconverter.layout.BPMNChoreography2DGraph
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.*;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.choreographytask.ChoreographyTask;
+import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.events.EndEvent;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.events.StartEvent;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.Gateway;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.ParallelGateway;
@@ -19,12 +20,14 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.*;
 
 @Service
 @Slf4j
 @Getter
+@RequestScope
 public class SpanContainerGraphToChoreographyGraphConverter implements Converter<ImmutableGraph<ChoreographyShape>> {
 
     private final Set<Participant> participantHashSet;
@@ -87,6 +90,12 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                 .map(choreographyShape -> (StartEvent) choreographyShape)
                 .findFirst()
                 .orElseThrow();
+        final var endEvent = choreographyShapes.stream()
+                .filter(choreographyShape -> choreographyShape instanceof EndEvent)
+                .map(choreographyShape -> (EndEvent) choreographyShape)
+                .findFirst()
+                .orElseThrow();
+        // TODO endevent
         final var choreography = Choreography.builder()
                 .id(RandomIDGenerator.generate())
                 .name("Choreography")
@@ -94,9 +103,10 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                 .participants(new ArrayList<>(participantHashSet))
                 .messageFlows(new ArrayList<>(messageMessageFlowMap.values()))
                 .startEvent(startEvent)
-                .sequenceFlows(new ArrayList<>(sequenceFlowHashSet))
+                .endEvent(endEvent)
+                .sequenceFlows(new ArrayList<>(sequenceFlowHashSet)) // TODO sequenceflows über den graphen adden
                 .gateways(parallelGateways)
-                .build();
+                .build(); // TODO check if endevent gets added and is null
         return choreography;
     }
 
@@ -136,19 +146,40 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                 final var choreographyTask = (ChoreographyTask) choreographyShape;
                 choreographyShape = new ParallelGateway(RandomIDGenerator.generateWithPrefix("ParallelGateway"));
                 final var sequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
+                // VLT new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"), chorstartID, chorEndID);
                 sequenceFlow.setSourceRef(choreographyTask.getId());
                 sequenceFlow.setSourceRef(choreographyShape.getId());
                 choreographyTask.setOutgoingFlow(sequenceFlow.getId());
                 ((ParallelGateway) choreographyShape).addIncomingFlow(sequenceFlow.getId());
                 sequenceFlowHashSet.add(sequenceFlow);
+                // VLT choreograph.putEdge(choreographyTask, sequenceFlow)
+                // VLT choreograph.putEdge(sequenceFlow, choreoshape)
+
                 choreographyGraph.putEdge(choreographyTask, choreographyShape);
             }
             createChoreographyShapeForSuccessors(
                     choreographyShape,
                     spanContainer);
         }
-        final var secondChoreographyShape = spanContainersWithChoreographyShape.get(List.copyOf(spanContainerGraph.nodes()).get(1));
-        choreographyGraph.putEdge(startEvent, secondChoreographyShape);
+        final var firstChoreographyShape =
+                (ChoreographyTask) spanContainersWithChoreographyShape.get(List.copyOf(spanContainerGraph.nodes()).get(0)); // TODO 14.02
+        final var sequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
+        sequenceFlow.setSourceRef(startEvent.getId());
+        sequenceFlow.setTargetRef(firstChoreographyShape.getId());
+        startEvent.setOutgoingFlow(sequenceFlow.getId());
+        firstChoreographyShape.setIncomingFlow(sequenceFlow.getId());
+        sequenceFlowHashSet.add(sequenceFlow);
+        choreographyGraph.putEdge(startEvent, firstChoreographyShape);
+        // TODO 14 here
+        final var lastChoreographyTask =
+                (ChoreographyTask) spanContainersWithChoreographyShape.get(List.copyOf(spanContainerGraph.nodes()).get(spanContainerGraph.nodes().size() - 1));
+        final var endEvent = new EndEvent(RandomIDGenerator.generateWithPrefix("EndEvent"));
+        final var lastSequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
+        lastSequenceFlow.setSourceRef(lastChoreographyTask.getId());
+        lastSequenceFlow.setTargetRef(endEvent.getId());
+        lastChoreographyTask.setOutgoingFlow(lastSequenceFlow.getId());
+        endEvent.addIncomingFlow(lastSequenceFlow.getId());
+        choreographyGraph.putEdge(lastChoreographyTask, endEvent);
     }
 
     private void createChoreographyShapeForSuccessors(final ChoreographyShape choreographyShape,

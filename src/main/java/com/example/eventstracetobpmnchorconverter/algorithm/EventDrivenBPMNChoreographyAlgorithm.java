@@ -25,11 +25,13 @@ import com.google.common.graph.ImmutableGraph;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.*;
 
 @Service
 @Slf4j
+@RequestScope
 public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDrivenBPMNChoreographyResult> {
 
     private Trace trace;
@@ -92,6 +94,7 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         topicsEventsInfoService.getTopics().forEach(topic -> {
             log.info("Topic: {}", topic);
         });
+        System.out.println(xml);
         return new EventDrivenBPMNChoreographyResult(xml);
     }
 
@@ -186,11 +189,4 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
 
     }
 
-
-    private void continueV3(final Trace trace, final Map<String, String> mapOfDetectedProcessesInTrace) {
-        TraceToSpanContainerGraphVisitor traceToSpanContainerGraphVisitor = new TraceToSpanContainerGraphVisitor();
-        final var spanContainerGraph = (ImmutableGraph<SpanContainer>) trace.accept(traceToSpanContainerGraphVisitor);
-        System.out.println("trace: " + trace);
-        spanContainerGraphToChoreographyGraphConverter.createChoreographyGraph();
-    }
 }

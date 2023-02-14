@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public abstract class ChoreographyShape {
+public abstract class ChoreographyShape extends ChoreographyElement {
 
     @JsonIgnore
     protected int x;

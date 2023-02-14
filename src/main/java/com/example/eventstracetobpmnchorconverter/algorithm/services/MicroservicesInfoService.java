@@ -4,12 +4,14 @@ import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trac
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.Trace;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
 @Getter
+@RequestScope
 public class MicroservicesInfoService {
 
     private Map<String, String> processMicroserviceMap = new HashMap<>();

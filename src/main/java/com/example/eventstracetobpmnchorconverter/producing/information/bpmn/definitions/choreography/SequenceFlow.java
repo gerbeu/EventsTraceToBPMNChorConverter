@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Getter
 @ToString
-public class SequenceFlow extends ChoreographyShape {
+public class SequenceFlow extends ChoreographyEdge { // War vorher ChoreographyShape
 
     @JacksonXmlProperty(isAttribute = true)
     private final String id;

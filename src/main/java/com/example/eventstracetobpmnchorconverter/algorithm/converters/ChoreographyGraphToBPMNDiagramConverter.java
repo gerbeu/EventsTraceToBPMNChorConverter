@@ -35,7 +35,7 @@ public class ChoreographyGraphToBPMNDiagramConverter implements Converter<BPMNDi
     private final static int PARTICIPANT_BAND_WIDTH = 100;
 
     private final List<BPMNShape> shapes = new ArrayList<>();
-    private final List<BPMNEdge> edges = new ArrayList<>();
+    private final List<BPMNEdge> edges = new ArrayList<>(); // is currently empty
 
     private final MutableGraph<ChoreographyShape> choreographyGraph;
 
@@ -61,10 +61,12 @@ public class ChoreographyGraphToBPMNDiagramConverter implements Converter<BPMNDi
         log.info("Converting choreography graph to BPMN diagram");
         choreographyGraph.nodes().forEach(choreographyShape -> {
             System.out.println("CONVERTING CHOREOGRAPHY SHAPE: " + choreographyShape.getId());
-            createBPMNShape(choreographyShape);
+            // TODO 14.02 make add to graph -> then go over graph edges and create bpmnedges for each sequenceflow
+            createBPMNShape(choreographyShape); // ADD TO GRAPH INSTEAD OF LIST
         });
-        final var bpmnPlane = new BPMNPlane(RandomIDGenerator.generateWithPrefix("BPMNPlane"), choreographyId, shapes,
-                edges);
+        final var bpmnPlane = new BPMNPlane(RandomIDGenerator.generateWithPrefix("BPMNPlane"), choreographyId, shapes
+                , // GRAPH.getnodes instead instead of shapes list
+                edges); // is currently empty
         final var bpmnLabelStyle = new BPMNLabelStyle(RandomIDGenerator.generate(), new Font("arial", "9"));
         return new BPMNDiagram(RandomIDGenerator.generate(), bpmnPlane, bpmnLabelStyle);
     }
@@ -80,15 +82,16 @@ public class ChoreographyGraphToBPMNDiagramConverter implements Converter<BPMNDi
     }
 
     private void createBPMNShapeForEvent(final Event event) {
-        shapes.add(BPMNShape.builder()
+        final var shape = BPMNShape.builder() // ADD TO GRAPH INSTEAD OF LIST
                 .id(RandomIDGenerator.generateWithPrefix("BPMN_Shape_Event"))
                 .bpmnElement(event.getId())
                 .bounds(createBoundsForEvent(event.getX(), event.getY()))
-                .build());
+                .build();
+        shapes.add(shape);
     }
 
     private void createBPMNShapeForGateway(final Gateway gateway) {
-        shapes.add(BPMNShape.builder()
+        shapes.add(BPMNShape.builder() // ADD TO GRAPH INSTEAD OF LIST
                 .id(RandomIDGenerator.generateWithPrefix("Gateway"))
                 .bpmnElement(gateway.getId())
                 .bounds(createBoundsForGateway(gateway.getX(), gateway.getY()))
@@ -96,7 +99,7 @@ public class ChoreographyGraphToBPMNDiagramConverter implements Converter<BPMNDi
     }
 
     private void createBPMNShapeForChoreographyTask(final ChoreographyTask choreographyTask) {
-        final var choreographyTaskBPMNShape = BPMNShape.builder()
+        final var choreographyTaskBPMNShape = BPMNShape.builder() // ADD TO GRAPH INSTEAD OF LIST
                 .id(RandomIDGenerator.generateWithPrefix("ChoreographyTask"))
                 .bpmnElement(choreographyTask.getId())
                 .bounds(createBoundsForChoreographyTask(choreographyTask.getX(), choreographyTask.getY()))
@@ -113,7 +116,7 @@ public class ChoreographyGraphToBPMNDiagramConverter implements Converter<BPMNDi
                 .map(Map.Entry::getKey)
                 .findFirst().orElseThrow();
         final var isMessageVisible = !eventMessage.getName().equals("");
-        shapes.add(BPMNShape.builder()
+        shapes.add(BPMNShape.builder() // ADD TO GRAPH INSTEAD OF LIST
                 .id(RandomIDGenerator.generate())
                 .bpmnElement(choreographyTask.getInitiatingParticipantRef())
                 .isHorizontal(String.valueOf(true))
@@ -125,7 +128,7 @@ public class ChoreographyGraphToBPMNDiagramConverter implements Converter<BPMNDi
     }
 
     private void createBPMNShapeForBottomNonInitiatingParticipantBand(final ChoreographyTask choreographyTask, final BPMNShape choreographyTaskBPMNShape) {
-        shapes.add(BPMNShape.builder()
+        shapes.add(BPMNShape.builder() // ADD TO GRAPH INSTEAD OF LIST
                 .id(RandomIDGenerator.generate())
                 .bpmnElement(choreographyTask.getParticipantRefs().stream()
                         .filter(participantRef -> !participantRef.equals(choreographyTask.getInitiatingParticipantRef()))

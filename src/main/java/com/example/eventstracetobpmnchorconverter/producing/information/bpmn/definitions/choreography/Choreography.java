@@ -3,7 +3,6 @@ package com.example.eventstracetobpmnchorconverter.producing.information.bpmn.de
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.choreographytask.ChoreographyTask;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.events.EndEvent;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.events.StartEvent;
-import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.Gateway;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.gateway.ParallelGateway;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
