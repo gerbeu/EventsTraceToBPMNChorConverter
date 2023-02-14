@@ -9,7 +9,7 @@ import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trac
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.json.JSONFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +21,13 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 @Slf4j
 public class JaegerUIController {
+
+    @Autowired
+    private final EventDrivenBPMNChoreographyAlgorithm eventDrivenBPMNChoreographyAlgorithm;
+
+    public JaegerUIController(EventDrivenBPMNChoreographyAlgorithm eventDrivenBPMNChoreographyAlgorithm) {
+        this.eventDrivenBPMNChoreographyAlgorithm = eventDrivenBPMNChoreographyAlgorithm;
+    }
 
     private void printSpanNamesOfTrace(final Trace trace) {
         trace.getSpans().forEach(
@@ -86,8 +93,7 @@ public class JaegerUIController {
     @PostMapping("/transform-trace-to-bpmn-choreography")
     public void processTraceToBPMNChor(@RequestBody Trace trace) {
         log.info("In processTraceToBPMNChor");
-        final var algorithm = new EventDrivenBPMNChoreographyAlgorithm(trace);
-        algorithm.convertTraceToBPMNChorResponse(trace);
+        eventDrivenBPMNChoreographyAlgorithm.convertTraceToBPMNChorResponse(trace);
     }
 
     @PostMapping("/transform-trace-to-guava-graph")
@@ -101,8 +107,7 @@ public class JaegerUIController {
     @PostMapping("/algorithm")
     public ResponseEntity<String> processAlgorithmRequest(@RequestBody Trace trace) {
         log.info("In processAlgorithmRequest");
-        final var eventDrivenBPMNChoreographyAlgorithm = new EventDrivenBPMNChoreographyAlgorithm(trace);
-        final var result = eventDrivenBPMNChoreographyAlgorithm.run();
+        final var result = eventDrivenBPMNChoreographyAlgorithm.run(trace);
         final var objectMapper = new ObjectMapper();
         try {
             final var resultJson = objectMapper.writeValueAsString(result);

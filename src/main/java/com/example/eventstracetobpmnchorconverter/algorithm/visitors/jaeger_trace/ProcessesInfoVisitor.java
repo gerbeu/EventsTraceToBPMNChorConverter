@@ -2,6 +2,7 @@ package com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_tra
 
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.Trace;
 import lombok.Getter;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 

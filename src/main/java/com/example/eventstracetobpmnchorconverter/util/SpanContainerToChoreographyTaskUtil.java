@@ -1,5 +1,7 @@
 package com.example.eventstracetobpmnchorconverter.util;
 
+import com.example.eventstracetobpmnchorconverter.algorithm.services.MicroservicesInfoService;
+import com.example.eventstracetobpmnchorconverter.algorithm.services.TopicsEventsInfoService;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.Message;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.MessageFlow;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.Participant;
@@ -11,10 +13,13 @@ import com.example.eventstracetobpmnchorconverter.producing.graph.SpanEventTuple
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 import java.util.*;
 
+@Service
 @Slf4j
 public class SpanContainerToChoreographyTaskUtil {
 
@@ -26,11 +31,23 @@ public class SpanContainerToChoreographyTaskUtil {
 
     private static final String PROCESSED_EVENT_TAG_KEY = "processed.event";
 
-    public static ChoreographyTask createFirstChoreographyTaskFromSpanContainer(final SpanContainer spanContainer,
-                                                                               final Map<String, String> mapOfDetectedProcessesInTrace,
-                                                                               final Set<Participant> choreographyParticipants,
-                                                                               final List<Message> messages,
-                                                                               final Map<Message, MessageFlow> messageMessageFlowMap) {
+    @Autowired
+    private final TopicsEventsInfoService topicsEventsInfoService;
+
+    @Autowired
+    private final MicroservicesInfoService microservicesInfoService;
+
+    public SpanContainerToChoreographyTaskUtil(TopicsEventsInfoService topicsEventsInfoService, MicroservicesInfoService microservicesInfoService) {
+        this.topicsEventsInfoService = topicsEventsInfoService;
+        this.microservicesInfoService = microservicesInfoService;
+    }
+
+
+    public ChoreographyTask createFirstChoreographyTaskFromSpanContainer(final SpanContainer spanContainer,
+                                                                         final Map<String, String> mapOfDetectedProcessesInTrace,
+                                                                         final Set<Participant> choreographyParticipants,
+                                                                         final List<Message> messages,
+                                                                         final Map<Message, MessageFlow> messageMessageFlowMap) {
         final var spanContainerIsSimpleSpan = spanContainer.getSpanComponent() instanceof Span;
         if (spanContainerIsSimpleSpan) {
             return createFirstChoreographyTaskForSimpleSpan(spanContainer, mapOfDetectedProcessesInTrace, choreographyParticipants, messages, messageMessageFlowMap);
@@ -43,11 +60,11 @@ public class SpanContainerToChoreographyTaskUtil {
         throw new RuntimeException("SpanContainer is a SpanEventTuple");
     }
 
-    private static ChoreographyTask createFirstChoreographyTaskForSimpleSpan(SpanContainer spanContainer,
-                                                                             Map<String, String> mapOfDetectedProcessesInTrace,
-                                                                             Set<Participant> choreographyParticipants,
-                                                                             List<Message> messages,
-                                                                             Map<Message, MessageFlow> messageMessageFlowMap) {
+    private ChoreographyTask createFirstChoreographyTaskForSimpleSpan(SpanContainer spanContainer,
+                                                                      Map<String, String> mapOfDetectedProcessesInTrace,
+                                                                      Set<Participant> choreographyParticipants,
+                                                                      List<Message> messages,
+                                                                      Map<Message, MessageFlow> messageMessageFlowMap) {
         final var choreographyTaskId = RandomIDGenerator.generateWithPrefix("ChoreographyTask");
         final var span = (Span) spanContainer.getSpanComponent();
         final var choreographyTaskName = span.getOperationName();
@@ -80,11 +97,11 @@ public class SpanContainerToChoreographyTaskUtil {
     }
 
 
-    public static ChoreographyTask createChoreographyTaskFromSpanContainer(final SpanContainer spanContainer,
-                                                                           final Map<String, String> mapOfDetectedProcessesInTrace,
-                                                                           final Set<Participant> choreographyParticipants,
-                                                                           final List<Message> messages,
-                                                                           final Map<Message, MessageFlow> messageMessageFlowMap) {
+    public ChoreographyTask createChoreographyTaskFromSpanContainer(final SpanContainer spanContainer,
+                                                                    final Map<String, String> mapOfDetectedProcessesInTrace,
+                                                                    final Set<Participant> choreographyParticipants,
+                                                                    final List<Message> messages,
+                                                                    final Map<Message, MessageFlow> messageMessageFlowMap) {
         final var spanContainerIsSpanEventTuple = spanContainer.getSpanComponent() instanceof SpanEventTuple;
         if (!spanContainerIsSpanEventTuple) {
             throw new RuntimeException("SpanContainer is not a SpanEventTuple");
@@ -103,12 +120,12 @@ public class SpanContainerToChoreographyTaskUtil {
         throw new RuntimeException("SpanEventTuple does not contain a ProducerMarkerSpan or a ProcessorMarkerSpan");
     }
 
-    private static ChoreographyTask createChoreographyTaskFromSpanEventTupleProducerMarkerSpan(SpanEventTuple spanEventTuple,
-                                                                                               final Map<String,
-                                                                                                       String> mapOfDetectedProcessesInTrace,
-                                                                                               final Set<Participant> choreographyParticipants,
-                                                                                               final List<Message> messages,
-                                                                                               final Map<Message, MessageFlow> messageMessageFlowMap) {
+    private ChoreographyTask createChoreographyTaskFromSpanEventTupleProducerMarkerSpan(SpanEventTuple spanEventTuple,
+                                                                                        final Map<String,
+                                                                                                String> mapOfDetectedProcessesInTrace,
+                                                                                        final Set<Participant> choreographyParticipants,
+                                                                                        final List<Message> messages,
+                                                                                        final Map<Message, MessageFlow> messageMessageFlowMap) {
         log.info("Creating ChoreographyTask from SpanEventTupleProducerMarkerSpan");
         final var choreographyTaskId = RandomIDGenerator.generateWithPrefix("ChoreographyTask");
         final var initiatingParticipant = getOrCreateParticipantFromMicroservice(spanEventTuple, mapOfDetectedProcessesInTrace,
@@ -127,8 +144,8 @@ public class SpanContainerToChoreographyTaskUtil {
     }
 
 
-    private static Message createMessageFromSpanEventTupleProducerMarkerSpan(SpanEventTuple spanEventTuple,
-                                                                             List<Message> messages) {
+    private Message createMessageFromSpanEventTupleProducerMarkerSpan(SpanEventTuple spanEventTuple,
+                                                                      List<Message> messages) {
         final var spanToGetEventFrom = spanEventTuple.getFirstSpan();
         final var eventString = Arrays.stream(spanToGetEventFrom.getTags())
                 .filter(tag -> tag.getKey().equals(PRODUCED_EVENT_TAG_KEY))
@@ -139,6 +156,15 @@ public class SpanContainerToChoreographyTaskUtil {
         final var objectMapper = new ObjectMapper();
         try {
             final var event = objectMapper.readValue(eventString, Event.class);
+            final var topic =
+                    Arrays.stream(spanEventTuple.getSecondSpan().getTags())
+                            .filter(tag -> tag.getKey().equals("messaging.destination"))
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("Span does not contain a messaging.destination tag"))
+                            .getValue();
+            final var microserviceName = microservicesInfoService.getMicroserviceNameByProcessId(spanEventTuple.getFirstSpan().getProcessID());
+            topicsEventsInfoService.addEventToTopic(eventString, topic);
+            topicsEventsInfoService.addProducerToTopic(microserviceName, topic);
             final var message = new Message(RandomIDGenerator.generateWithPrefix("Message"), event.getType());
             messages.add(message);
             return message;
@@ -148,16 +174,16 @@ public class SpanContainerToChoreographyTaskUtil {
 
     }
 
-    private static ChoreographyTask createChoreographyTaskFromSpanEventTupleProcessorMarkerSpan(SpanEventTuple spanEventTuple,
-                                                                                                final Map<String, String> mapOfDetectedProcessesInTrace,
-                                                                                                final Set<Participant> choreographyParticipants,
-                                                                                                final List<Message> messages,
-                                                                                                final Map<Message, MessageFlow> messageMessageFlowMap) {
+    private ChoreographyTask createChoreographyTaskFromSpanEventTupleProcessorMarkerSpan(SpanEventTuple spanEventTuple,
+                                                                                         final Map<String, String> mapOfDetectedProcessesInTrace,
+                                                                                         final Set<Participant> choreographyParticipants,
+                                                                                         final List<Message> messages,
+                                                                                         final Map<Message, MessageFlow> messageMessageFlowMap) {
         log.info("Creating ChoreographyTask from SpanEventTupleProcessorMarkerSpan");
         final var choreographyTaskId = RandomIDGenerator.generateWithPrefix("ChoreographyTask");
         final var initiatingParticipant =
                 createInitiatingParticipantFromSpanEventTupleProcessorMarkerSpan(spanEventTuple,
-                        mapOfDetectedProcessesInTrace, choreographyParticipants);
+                        choreographyParticipants);
         final var initiatingParticipantRef = initiatingParticipant.getId();
         final var receivingParticipant = getOrCreateParticipantFromMicroservice(spanEventTuple,
                 mapOfDetectedProcessesInTrace, choreographyParticipants);
@@ -173,8 +199,8 @@ public class SpanContainerToChoreographyTaskUtil {
 
     }
 
-    private static Message createMessageFromSpanEventTupleProcessorMarkerSpan(SpanEventTuple spanEventTuple,
-                                                                              List<Message> messages) {
+    private Message createMessageFromSpanEventTupleProcessorMarkerSpan(SpanEventTuple spanEventTuple,
+                                                                       List<Message> messages) {
         final var spanToGetEventFrom = spanEventTuple.getSecondSpan();
         final var eventString = Arrays.stream(spanToGetEventFrom.getTags())
                 .filter(tag -> tag.getKey().equals(PROCESSED_EVENT_TAG_KEY))
@@ -185,8 +211,16 @@ public class SpanContainerToChoreographyTaskUtil {
         final var objectMapper = new ObjectMapper();
         try {
             final var event = objectMapper.readValue(eventString, Event.class);
+            final var topic =
+                    Arrays.stream(spanEventTuple.getFirstSpan().getTags())
+                            .filter(tag -> tag.getKey().equals("messaging.destination"))
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("Span does not contain a messaging.destination tag"))
+                            .getValue();
+            final var microserviceName = microservicesInfoService.getMicroserviceNameByProcessId(spanEventTuple.getFirstSpan().getProcessID());
+            topicsEventsInfoService.addEventToTopic(eventString, topic);
+            topicsEventsInfoService.addConsumerToTopic(microserviceName, topic);
             final var message = new Message(RandomIDGenerator.generateWithPrefix("Message"), event.getType());
-            // TODO CHECK
             messages.add(message);
             return message;
         } catch (JsonProcessingException e) {
@@ -195,19 +229,18 @@ public class SpanContainerToChoreographyTaskUtil {
     }
 
 
-    private static Participant createInitiatingParticipantFromSpanEventTupleProcessorMarkerSpan(SpanEventTuple spanEventTuple,
-                                                                                                final Map<String, String> mapOfDetectedProcessesInTrace,
-                                                                                                final Set<Participant> choreographyParticipants) {
+    private Participant createInitiatingParticipantFromSpanEventTupleProcessorMarkerSpan(SpanEventTuple spanEventTuple,
+                                                                                         final Set<Participant> choreographyParticipants) {
         return getOrCreateParticipantForMessagingMarkerSpan(spanEventTuple.getFirstSpan(), choreographyParticipants);
     }
 
-    private static Participant createReceivingParticipantFromSpanEventTupleProducerMarkerSpan(SpanEventTuple spanEventTuple,
-                                                                                              final Set<Participant> choreographyParticipants) {
+    private Participant createReceivingParticipantFromSpanEventTupleProducerMarkerSpan(SpanEventTuple spanEventTuple,
+                                                                                       final Set<Participant> choreographyParticipants) {
         return getOrCreateParticipantForMessagingMarkerSpan(spanEventTuple.getSecondSpan(), choreographyParticipants);
     }
 
-    private static Participant getOrCreateParticipantForMessagingMarkerSpan(Span span,
-                                                                            Set<Participant> choreographyParticipants) {
+    private Participant getOrCreateParticipantForMessagingMarkerSpan(Span span,
+                                                                     Set<Participant> choreographyParticipants) {
         final var messagingDestination = Arrays.stream(span.getTags())
                 .filter(tag -> tag.getKey().equals("messaging.destination"))
                 .findFirst()
@@ -237,9 +270,9 @@ public class SpanContainerToChoreographyTaskUtil {
         return newParticipant;
     }
 
-    private static Participant getOrCreateParticipantFromMicroservice(SpanEventTuple spanEventTuple,
-                                                                      Map<String, String> mapOfDetectedProcessesInTrace,
-                                                                      final Set<Participant> choreographyParticipants) {
+    private Participant getOrCreateParticipantFromMicroservice(SpanEventTuple spanEventTuple,
+                                                               Map<String, String> mapOfDetectedProcessesInTrace,
+                                                               final Set<Participant> choreographyParticipants) {
         final var nameOfReceivingParticipant = mapOfDetectedProcessesInTrace.get(spanEventTuple.getFirstSpan().getProcessID());
         final var foundParticipant = choreographyParticipants.stream()
                 .filter(participant -> participant.getName().equals(nameOfReceivingParticipant))

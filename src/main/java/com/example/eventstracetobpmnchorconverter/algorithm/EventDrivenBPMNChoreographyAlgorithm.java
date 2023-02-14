@@ -2,12 +2,11 @@ package com.example.eventstracetobpmnchorconverter.algorithm;
 
 import com.example.eventstracetobpmnchorconverter.algorithm.converters.ChoreographyGraphToBPMNDiagramConverter;
 import com.example.eventstracetobpmnchorconverter.algorithm.result.EventDrivenBPMNChoreographyResult;
+import com.example.eventstracetobpmnchorconverter.algorithm.services.MicroservicesInfoService;
+import com.example.eventstracetobpmnchorconverter.algorithm.services.TopicsEventsInfoService;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.EventsInfoVisitor;
-import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.ProcessesInfoVisitor;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TopicsInfoVisitor;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TraceToSpanContainerGraphVisitor;
-import com.example.eventstracetobpmnchorconverter.producing.information.EventsInfo;
-import com.example.eventstracetobpmnchorconverter.producing.information.TopicsInfo;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.BPMNDefinitions;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.Trace;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.criteria.ProcessTagCriteria;
@@ -24,23 +23,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.graph.ImmutableGraph;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Service
 @Slf4j
 public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDrivenBPMNChoreographyResult> {
 
-    private final Trace trace;
+    private Trace trace;
 
     private final EventsInfoVisitor eventsInfoVisitor = new EventsInfoVisitor();
 
     private final TopicsInfoVisitor topicsInfoVisitor = new TopicsInfoVisitor();
-
-    private final ProcessesInfoVisitor processesInfoVisitor = new ProcessesInfoVisitor();
-
-    private EventsInfo eventsInfo;
-
-    private TopicsInfo topicsInfo;
 
     private BPMNDefinitions bpmnDefinitions;
 
@@ -56,12 +52,26 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
 
     private Map<Message, MessageFlow> messageMessageFlowMap;
 
-    public EventDrivenBPMNChoreographyAlgorithm(Trace trace) {
-        this.trace = trace;
+    @Autowired
+    private final SpanContainerGraphToChoreographyGraphConverter spanContainerGraphToChoreographyGraphConverter;
+
+    @Autowired
+    private final TopicsEventsInfoService topicsEventsInfoService;
+
+    @Autowired
+    private final MicroservicesInfoService microservicesInfoService;
+
+    public EventDrivenBPMNChoreographyAlgorithm(SpanContainerGraphToChoreographyGraphConverter spanContainerGraphToChoreographyGraphConverter,
+                                                TopicsEventsInfoService topicsEventsInfoService, MicroservicesInfoService microservicesInfoService) {
+        this.spanContainerGraphToChoreographyGraphConverter = spanContainerGraphToChoreographyGraphConverter;
+        this.topicsEventsInfoService = topicsEventsInfoService;
+        this.microservicesInfoService = microservicesInfoService;
     }
 
+
     @Override
-    public EventDrivenBPMNChoreographyResult run() {
+    public EventDrivenBPMNChoreographyResult run(Trace trace) {
+        this.trace = trace;
         filterTrace();
         createEventsInfo();
         createTopicsInfo();
@@ -79,7 +89,10 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        return new EventDrivenBPMNChoreographyResult(null, null, xml);
+        topicsEventsInfoService.getTopics().forEach(topic -> {
+            log.info("Topic: {}", topic);
+        });
+        return new EventDrivenBPMNChoreographyResult(xml);
     }
 
     private void printBPMNDefintions() {
@@ -127,11 +140,6 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         trace.accept(topicsInfoVisitor);
         final var setOfDetectedTopicsInTrace = (Set<String>) trace.accept(topicsInfoVisitor);
         // Detect all processes (microservices) in the trace
-        trace.accept(processesInfoVisitor);
-        final var mapOfDetectedProcessesInTrace = (Map<String, String>) trace.accept(processesInfoVisitor);
-        // TODO remove Print all spans
-        //continueV2(trace, mapOfDetectedProcessesInTrace, setOfDetectedTopicsInTrace);
-        continueV3(trace, mapOfDetectedProcessesInTrace);
     }
 
     private void createSpanContainerGraphFromTrace() {
@@ -142,10 +150,9 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
 
     private void createChoreographyGraphAndChoreography() {
         log.info("Creating ChoreographyGraph from SpanContainerGraph");
-        trace.accept(processesInfoVisitor);
-        final var mapOfDetectedProcessesInTrace = (Map<String, String>) this.trace.accept(processesInfoVisitor);
-        final var spanContainerGraphToChoreographyGraphConverter = new SpanContainerGraphToChoreographyGraphConverter(
-                spanContainerGraph, mapOfDetectedProcessesInTrace);
+        microservicesInfoService.createMicroservicesInfo(trace);
+        final var mapOfDetectedProcessesInTrace = microservicesInfoService.getProcessMicroserviceMap();
+        spanContainerGraphToChoreographyGraphConverter.init(spanContainerGraph, mapOfDetectedProcessesInTrace);
         this.choreographyGraph = spanContainerGraphToChoreographyGraphConverter.convert();
         this.messageHashSet = spanContainerGraphToChoreographyGraphConverter.getMessages();
         this.messageMessageFlowMap = spanContainerGraphToChoreographyGraphConverter.getMessageMessageFlowMap();
@@ -184,8 +191,6 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         TraceToSpanContainerGraphVisitor traceToSpanContainerGraphVisitor = new TraceToSpanContainerGraphVisitor();
         final var spanContainerGraph = (ImmutableGraph<SpanContainer>) trace.accept(traceToSpanContainerGraphVisitor);
         System.out.println("trace: " + trace);
-        final var spanContainerGraphToChoreographyGraphConverter =
-                new SpanContainerGraphToChoreographyGraphConverter(spanContainerGraph, mapOfDetectedProcessesInTrace);
         spanContainerGraphToChoreographyGraphConverter.createChoreographyGraph();
     }
 }

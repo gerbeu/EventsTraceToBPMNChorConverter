@@ -17,9 +17,12 @@ import com.google.common.graph.MutableGraph;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Service
 @Slf4j
 @Getter
 public class SpanContainerGraphToChoreographyGraphConverter implements Converter<ImmutableGraph<ChoreographyShape>> {
@@ -34,23 +37,31 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
 
     private final Set<SequenceFlow> sequenceFlowHashSet;
 
-    private final Map<String, String> mapOfDetectedProcessesInTrace;
+    private Map<String, String> mapOfDetectedProcessesInTrace;
 
-    private final ImmutableGraph<SpanContainer> spanContainerGraph;
+    private ImmutableGraph<SpanContainer> spanContainerGraph;
 
     @Getter(AccessLevel.NONE)
     private final MutableGraph<ChoreographyShape> choreographyGraph;
 
-    public SpanContainerGraphToChoreographyGraphConverter(ImmutableGraph<SpanContainer> spanContainerGraph,
-                                                          Map<String, String> mapOfDetectedProcessesInTrace) {
-        this.spanContainerGraph = spanContainerGraph;
-        this.mapOfDetectedProcessesInTrace = mapOfDetectedProcessesInTrace;
+    @Autowired
+    private final SpanContainerToChoreographyTaskUtil spanContainerToChoreographyTaskUtil;
+
+
+    public SpanContainerGraphToChoreographyGraphConverter(SpanContainerToChoreographyTaskUtil spanContainerToChoreographyTaskUtil) {
+        this.spanContainerToChoreographyTaskUtil = spanContainerToChoreographyTaskUtil;
         this.participantHashSet = new HashSet<>();
         this.messages = new ArrayList<>();
         this.messageMessageFlowMap = new HashMap<>();
         this.spanContainersWithChoreographyShape = new HashMap<>();
         this.sequenceFlowHashSet = new HashSet<>();
         this.choreographyGraph = GraphBuilder.directed().build();
+    }
+
+    public void init(ImmutableGraph<SpanContainer> spanContainerGraph,
+                     Map<String, String> mapOfDetectedProcessesInTrace) {
+        this.spanContainerGraph = spanContainerGraph;
+        this.mapOfDetectedProcessesInTrace = mapOfDetectedProcessesInTrace;
     }
 
     @Override
@@ -107,10 +118,10 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
             if (!existsChoreographyTaskForSpanContainer) {
                 if (i == 0) {
                     // Creating first ChoreographyTask
-                    choreographyShape = SpanContainerToChoreographyTaskUtil.createFirstChoreographyTaskFromSpanContainer(
+                    choreographyShape = spanContainerToChoreographyTaskUtil.createFirstChoreographyTaskFromSpanContainer(
                             spanContainer, mapOfDetectedProcessesInTrace, participantHashSet, messages, messageMessageFlowMap);
                 } else {
-                    choreographyShape = SpanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
+                    choreographyShape = spanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
                             spanContainer, mapOfDetectedProcessesInTrace, participantHashSet, messages, messageMessageFlowMap);
                 }
             } else {
@@ -148,7 +159,7 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
             final var sequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
             if (successorChoreographyTask == null) {
                 log.info("Creating ChoreographyTask for successor: " + successor);
-                successorChoreographyTask = SpanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
+                successorChoreographyTask = spanContainerToChoreographyTaskUtil.createChoreographyTaskFromSpanContainer(
                         successor,
                         mapOfDetectedProcessesInTrace,
                         participantHashSet,
