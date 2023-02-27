@@ -25,10 +25,8 @@ public class BPMNChoreography2DGraphLayoutCreator implements GraphLayoutCreator<
         int level = 0;
         while (!queue.isEmpty()) {
             int size = queue.size();
-            //System.out.println("Level " + level + ": ");
             for (int i = 0; i < size; i++) {
                 ChoreographyShape node = queue.poll();
-                //System.out.print(node + " ");
                 final var xCoordinate = DEFAULT_X_LEVEL + X_INCREMENT_PER_LEVEL * level;
                 final var yCoordinate = DEFAULT_Y_LEVEL + Y_INCREMENT_PER_LEVEL * i;
                 node.setX(xCoordinate);
@@ -40,7 +38,6 @@ public class BPMNChoreography2DGraphLayoutCreator implements GraphLayoutCreator<
                     queue.add(neighbor);
                 }
             }
-            //System.out.println();
             level++;
         }
     }

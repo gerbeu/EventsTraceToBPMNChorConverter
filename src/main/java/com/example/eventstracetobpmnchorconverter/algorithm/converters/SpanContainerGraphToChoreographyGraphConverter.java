@@ -95,7 +95,6 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                 .map(choreographyShape -> (EndEvent) choreographyShape)
                 .findFirst()
                 .orElseThrow();
-        // TODO endevent
         final var choreography = Choreography.builder()
                 .id(RandomIDGenerator.generate())
                 .name("Choreography")
@@ -104,9 +103,9 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                 .messageFlows(new ArrayList<>(messageMessageFlowMap.values()))
                 .startEvent(startEvent)
                 .endEvent(endEvent)
-                .sequenceFlows(new ArrayList<>(sequenceFlowHashSet)) // TODO sequenceflows über den graphen adden
+                .sequenceFlows(new ArrayList<>(sequenceFlowHashSet))
                 .gateways(parallelGateways)
-                .build(); // TODO check if endevent gets added and is null
+                .build();
         return choreography;
     }
 
@@ -146,14 +145,11 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                 final var choreographyTask = (ChoreographyTask) choreographyShape;
                 choreographyShape = new ParallelGateway(RandomIDGenerator.generateWithPrefix("ParallelGateway"));
                 final var sequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
-                // VLT new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"), chorstartID, chorEndID);
                 sequenceFlow.setSourceRef(choreographyTask.getId());
                 sequenceFlow.setSourceRef(choreographyShape.getId());
                 choreographyTask.setOutgoingFlow(sequenceFlow.getId());
                 ((ParallelGateway) choreographyShape).addIncomingFlow(sequenceFlow.getId());
                 sequenceFlowHashSet.add(sequenceFlow);
-                // VLT choreograph.putEdge(choreographyTask, sequenceFlow)
-                // VLT choreograph.putEdge(sequenceFlow, choreoshape)
 
                 choreographyGraph.putEdge(choreographyTask, choreographyShape);
             }
@@ -162,7 +158,7 @@ public class SpanContainerGraphToChoreographyGraphConverter implements Converter
                     spanContainer);
         }
         final var firstChoreographyShape =
-                (ChoreographyTask) spanContainersWithChoreographyShape.get(List.copyOf(spanContainerGraph.nodes()).get(0)); // TODO 14.02
+                (ChoreographyTask) spanContainersWithChoreographyShape.get(List.copyOf(spanContainerGraph.nodes()).get(0));
         final var sequenceFlow = new SequenceFlow(RandomIDGenerator.generateWithPrefix("SequenceFlow"));
         sequenceFlow.setSourceRef(startEvent.getId());
         sequenceFlow.setTargetRef(firstChoreographyShape.getId());

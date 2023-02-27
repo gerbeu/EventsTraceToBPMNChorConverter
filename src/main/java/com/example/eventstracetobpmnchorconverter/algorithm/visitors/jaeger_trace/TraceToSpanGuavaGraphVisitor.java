@@ -18,11 +18,6 @@ public class TraceToSpanGuavaGraphVisitor implements TraceVisitor<ImmutableGraph
         final var spanList = trace.getSpans();
         final MutableGraph<Span> spanGraph = GraphBuilder.directed().build();
         // Add nodes to span graph
-        System.out.println("PRINTING SPANLIST");
-        for (final var span : spanList) {
-            System.out.println(MessageFormat.format("Span: {0} - {1}", span.getSpanID(), span.getOperationName()));
-        }
-        System.out.println("END PRINTING SPANLIST");
         spanList.forEach(spanGraph::addNode);
         // Add edges to span graph
         addEdgesToSpanGraph(spanGraph, spanList);

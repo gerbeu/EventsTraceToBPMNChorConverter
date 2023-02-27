@@ -5,7 +5,6 @@ import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.def
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.choreography.Participant;
 
 import java.util.Map;
-import java.util.UUID;
 
 public class MessageFlowUtil {
 

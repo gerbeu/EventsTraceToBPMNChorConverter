@@ -11,9 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @AllArgsConstructor
 @Builder
@@ -54,13 +52,6 @@ public class Choreography {
     @JacksonXmlProperty(localName = "bpmn2:parallelGateway")
     private List<ParallelGateway> gateways;
 
-//    public Choreography(String id) {
-//        this.id = id == null ? UUID.randomUUID().toString() : id;
-//        this.participants = new ArrayList<>();
-//        this.messageFlows = new ArrayList<>();
-//        this.choreographyTasks = new ArrayList<>();
-//        this.sequenceFlows = new ArrayList<>();
-//    }
 
     public void addChoreographyTask(ChoreographyTask choreographyTask) {
         choreographyTasks.add(choreographyTask);

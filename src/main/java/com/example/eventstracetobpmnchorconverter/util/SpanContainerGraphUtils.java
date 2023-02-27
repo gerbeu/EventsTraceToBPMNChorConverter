@@ -7,7 +7,6 @@ import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class SpanContainerGraphUtils {
@@ -48,7 +47,6 @@ public class SpanContainerGraphUtils {
                 return spanContainerChildrenOfSpan;
             }
         }
-        // TODO throw exception
         throw new RuntimeException("SpanContainer does not hold a span or a span event tuple");
     }
 
@@ -71,7 +69,6 @@ public class SpanContainerGraphUtils {
                         .anyMatch(reference -> reference.getSpanID().equals(spanContainerSpan.getSpanID()));
                 return spanContainerSpanHasRefOnSpanEventTupleFirstSpan;
             }
-            // TODO throw exception
             throw new RuntimeException("SpanContainer does not hold a span or a span event tuple");
         }).toList();
     }

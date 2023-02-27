@@ -16,8 +16,6 @@ public class TraceToSpanContainerGraphVisitor implements TraceVisitor<ImmutableG
     public ImmutableGraph<SpanContainer> visit(Trace trace) {
         final var spanList = trace.getSpans();
         final MutableGraph<SpanContainer> spanContainerGraph = GraphBuilder.directed().build();
-        // TODO remove
-        System.out.println("Spans which dont have messaging.system or messaging.destination tags:");
         spanList.stream()
                 // Filter spans which dont have messaging.system or messaging.destination tags
                 .filter(span -> !SpanUtils.isSpanAnMessagingMarker(span))

@@ -4,8 +4,6 @@ import com.example.eventstracetobpmnchorconverter.algorithm.converters.Choreogra
 import com.example.eventstracetobpmnchorconverter.algorithm.result.EventDrivenBPMNChoreographyResult;
 import com.example.eventstracetobpmnchorconverter.algorithm.services.MicroservicesInfoService;
 import com.example.eventstracetobpmnchorconverter.algorithm.services.TopicsEventsInfoService;
-import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.EventsInfoVisitor;
-import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TopicsInfoVisitor;
 import com.example.eventstracetobpmnchorconverter.algorithm.visitors.jaeger_trace.TraceToSpanContainerGraphVisitor;
 import com.example.eventstracetobpmnchorconverter.producing.information.bpmn.definitions.BPMNDefinitions;
 import com.example.eventstracetobpmnchorconverter.jaegerTrace.Trace;
@@ -35,10 +33,6 @@ import java.util.*;
 public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDrivenBPMNChoreographyResult> {
 
     private Trace trace;
-
-    private final EventsInfoVisitor eventsInfoVisitor = new EventsInfoVisitor();
-
-    private final TopicsInfoVisitor topicsInfoVisitor = new TopicsInfoVisitor();
 
     private BPMNDefinitions bpmnDefinitions;
 
@@ -86,14 +80,6 @@ public class EventDrivenBPMNChoreographyAlgorithm implements Algorithm<EventDriv
         tagCriteria.meetCriteria(this.trace);
         final var processTagCriteria = new ProcessTagCriteria();
         processTagCriteria.meetCriteria(this.trace);
-    }
-
-    public void convertTraceToBPMNChorResponse(final Trace trace) {
-        // Perform filtering of trace with all specified criteria
-        final var tagCriteria = new TagCriteria();
-        tagCriteria.meetCriteria(trace);
-        final var processTagCriteria = new ProcessTagCriteria();
-        processTagCriteria.meetCriteria(trace);
     }
 
     private void createSpanContainerGraphFromTrace() {

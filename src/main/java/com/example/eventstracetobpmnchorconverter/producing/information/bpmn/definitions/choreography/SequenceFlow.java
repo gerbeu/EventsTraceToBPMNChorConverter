@@ -5,8 +5,6 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.UUID;
-
 @Getter
 @ToString
 public class SequenceFlow extends ChoreographyEdge { // War vorher ChoreographyShape

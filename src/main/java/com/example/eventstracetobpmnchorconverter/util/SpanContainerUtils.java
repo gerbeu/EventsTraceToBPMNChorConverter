@@ -5,7 +5,6 @@ import com.example.eventstracetobpmnchorconverter.producing.graph.SpanContainer;
 import com.example.eventstracetobpmnchorconverter.producing.graph.SpanEventTuple;
 
 import java.util.List;
-import java.util.UUID;
 
 public class SpanContainerUtils {
 
@@ -21,7 +20,6 @@ public class SpanContainerUtils {
                 final var spanEventTuple = new SpanEventTuple(span, optionalChildSpanMessagingMarker.get());
                 return new SpanContainer(RandomIDGenerator.generateWithPrefix("SpanContainer"), spanEventTuple);
             } else {
-                System.out.println("Span: " + span);
                 throw new RuntimeException("Span is an event producer marker but has no child span with messaging" +
                         ".system or messaging.destination tags");
             }

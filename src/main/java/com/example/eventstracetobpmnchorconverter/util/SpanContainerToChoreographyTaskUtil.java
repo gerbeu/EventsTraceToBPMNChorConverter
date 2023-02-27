@@ -88,10 +88,6 @@ public class SpanContainerToChoreographyTaskUtil {
                 .sourceRef(initiatingParticipant.getId())
                 .targetRef(receivingParticipant.getId())
                 .build();
-//        final var messageFlow = new MessageFlow(UUID.randomUUID().toString(),
-//                message.getId(),
-//                initiatingParticipant.getId(),
-//                receivingParticipant.getId());
         messageMessageFlowMap.put(message, messageFlow);
         final var messageFlowRefs = List.of(messageFlow.getId());
         return new ChoreographyTask(choreographyTaskId, choreographyTaskName, initiatingParticipantRef,

@@ -16,7 +16,6 @@ public class ChoreographyTask extends ChoreographyShape {
     @JacksonXmlProperty(isAttribute = true)
     private final String name;
 
-    // TODO: check bpmn name
     @JacksonXmlProperty(isAttribute = true)
     private final String initiatingParticipantRef;
 
